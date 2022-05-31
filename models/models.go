@@ -4,9 +4,10 @@ import "gorm.io/gorm"
 
 type Comment struct {
 	gorm.Model
-	Content string `json:"content" form:"content" db:"content" binding:"required,min=1"`
-	Ip      string `json:"ip" db:"ip"`
-	Agent   string `json:"agent" db:"agent"`
+	Content  string `json:"content" form:"content" db:"content" binding:"required,min=1"`
+	ParentId string `json:"parent_id" form:"parent_id" db:"parent_id" binding:"-"`
+	Ip       string `json:"ip" db:"ip"`
+	Agent    string `json:"agent" db:"agent"`
 }
 
 type Ticker struct {

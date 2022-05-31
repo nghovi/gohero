@@ -48,16 +48,9 @@ func GetComment(c *gin.Context) {
 
 func CreateComment(c *gin.Context) {
 	var comment models.Comment
-	if err := c.ShouldBind(&comment); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// story := models.Comment{
-	// 	Content: c.PostForm("content"),
-	// 	Ip:      c.ClientIP(),
-	// 	Agent:   c.Request.UserAgent(),
-	// }
+	c.Bind(&comment)
+	comment.Ip = c.ClientIP()
+	comment.Agent = c.Request.UserAgent()
 	result := db.Create(&comment) // pass pointer of data to Create
 	if result.Error == nil {
 		c.JSON(200, gin.H{
@@ -76,9 +69,10 @@ func UpdateComment(c *gin.Context) {
 		Agent:   c.Request.UserAgent(),
 	})
 	if result.Error == nil {
-		c.JSON(200, gin.H{
-			"message": "Success",
-		})
+		c.Redirect(http.StatusFound, "/comments")
+		// c.JSON(200, gin.H{
+		// 	"message": "Success",
+		// })
 	} else {
 		c.JSON(200, gin.H{"error": result.Error})
 	}
@@ -86,16 +80,20 @@ func UpdateComment(c *gin.Context) {
 
 //No reply your own comment
 func ReplyComment(c *gin.Context) {
-	story := models.Comment{
-		Content: c.PostForm("content"),
-		Ip:      c.ClientIP(),
-		Agent:   c.Request.UserAgent(),
+	var parentComment models.Comment
+	err := db.First(&parentComment, c.PostForm("parent_id")).Error
+	if err != nil {
+		c.JSON(400, gin.H{"msg": err.Error()})
 	}
-	result := db.Create(&story) // pass pointer of data to Create
+	var reply models.Comment
+	c.Bind(&reply)
+	reply.Ip = c.ClientIP()
+	reply.Agent = c.Request.UserAgent()
+	result := db.Create(&reply) // pass pointer of data to Create
 	if result.Error == nil {
 		c.JSON(200, gin.H{
 			"message": "Success",
-			"story":   story,
+			"comment": reply,
 		})
 	} else {
 		c.JSON(200, gin.H{"error": result.Error})
